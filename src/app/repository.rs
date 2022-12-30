@@ -1,5 +1,5 @@
 use crate::{
-    core::error::Error,
+    app::error::Error,
     util::pagination::{Limit, Offset},
 };
 use async_trait::async_trait;

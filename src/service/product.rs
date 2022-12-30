@@ -1,75 +1,56 @@
+use crate::app::repository::Repository;
+use crate::util::pagination::Offset;
 use crate::{
-    core::{app_state::AppState, repository::Repository},
-    entity::product::Product,
-    util::pagination::{Limit, Pagination},
+    app::{error::Error, service::Service},
+    model::product::Product,
+    util::pagination::Limit,
 };
-use axum::{
-    extract::{Path, Query, State},
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use async_trait::async_trait;
+use rust_decimal_macros::dec;
 use uuid::Uuid;
 
-pub async fn products_index(
-    State(app_state): State<AppState>,
-    pagination: Option<Query<Pagination>>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let Pagination { limit, offset } = pagination.unwrap_or_default().0;
-    let limit = limit.unwrap_or(Limit(10));
-    let offset = offset.unwrap_or_default();
-    let list = app_state
-        .db_product_repo()
-        .list(limit, offset)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Json(list))
+pub struct ProductService {
+    repository: Box<dyn Repository<Entity = Product> + Send + Sync + 'static>,
 }
 
-pub async fn products_create(
-    State(app_state): State<AppState>,
-    Json(entity): Json<Product>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let entity = app_state
-        .db_product_repo()
-        .create(entity)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Json(entity))
+impl ProductService {
+    pub fn new<R: Repository<Entity = Product> + Send + Sync + 'static>(repository: R) -> Self {
+        Self {
+            repository: Box::new(repository),
+        }
+    }
+
+    fn validate(&self, entity: &Product) -> Result<(), Error> {
+        if entity.price == dec!(0) {
+            return Err(Error::Validation(String::from("price can't be zero")));
+        }
+        Ok(())
+    }
 }
 
-pub async fn products_read(
-    Path(id): Path<Uuid>,
-    State(app_state): State<AppState>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let entity = app_state
-        .db_product_repo()
-        .read(id)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Json(entity))
-}
+#[async_trait]
+impl Service for ProductService {
+    type Entity = Product;
 
-pub async fn products_update(
-    State(app_state): State<AppState>,
-    Json(entity): Json<Product>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let entity = app_state
-        .db_product_repo()
-        .update(entity)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Json(entity))
-}
+    async fn read(&self, id: uuid::Uuid) -> Result<Option<Self::Entity>, Error> {
+        self.repository.read(id).await
+    }
 
-pub async fn products_delete(
-    Path(id): Path<Uuid>,
-    State(app_state): State<AppState>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let entity = app_state
-        .db_product_repo()
-        .delete(id)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Json(entity))
+    async fn list(&self, limit: Limit, offset: Offset) -> Result<Vec<Self::Entity>, Error> {
+        self.repository.list(limit, offset).await
+    }
+
+    async fn create(&self, entity: Self::Entity) -> Result<Self::Entity, Error> {
+        self.validate(&entity)?;
+        self.repository.create(entity).await
+    }
+
+    async fn update(&self, entity: Self::Entity) -> Result<Self::Entity, Error> {
+        self.validate(&entity)?;
+        self.repository.update(entity).await
+    }
+
+    async fn delete(&self, id: uuid::Uuid) -> Result<Uuid, Error> {
+        self.repository.delete(id).await
+    }
 }
