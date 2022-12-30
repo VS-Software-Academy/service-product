@@ -1,21 +1,23 @@
-pub mod core;
-pub mod entity;
+pub mod app;
+pub mod controller;
+pub mod model;
 pub mod repository;
 pub mod service;
 pub mod util;
 
 use crate::{
-    core::app_state::AppState,
-    repository::{category::DbCategoryRepo, product::DbProductRepo},
-    service::{
+    app::app_state::AppState,
+    controller::{
         category::{categories_create, categories_delete, categories_index, categories_read},
         product::{
             products_create, products_delete, products_index, products_read, products_update,
         },
     },
+    repository::{category::DbCategoryRepository, product::DbProductRepository},
 };
 use axum::{http::StatusCode, routing::get, Router};
 use clap::Parser;
+use service::{category::CategoryService, product::ProductService};
 use sqlx::postgres::PgPoolOptions;
 use std::{error::Error, net::SocketAddr};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
@@ -53,7 +55,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("can connect to database");
 
     // Create app state
-    let app_state = AppState::new(DbProductRepo::new(pool.clone()), DbCategoryRepo::new(pool));
+    let app_state = AppState::new(
+        ProductService::new(DbProductRepository::new(pool.clone())),
+        CategoryService::new(DbCategoryRepository::new(pool)),
+    );
 
     // Define routes
     let app = Router::new()
