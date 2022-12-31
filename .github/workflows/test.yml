@@ -22,12 +22,6 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v3
 
-      # - name: Make envfile
-      #   uses: SpicyPizza/create-envfile@v1.3
-      #   with:
-      #     envkey_POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-      #     envkey_DATABASE_URL: ${{ env.DATABASE_URL }}
-
       - name: Database container
         uses: isbang/compose-action@v1.4.1
         with:
