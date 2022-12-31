@@ -1,5 +1,15 @@
 ## Project to demonstrate product API service
 
+<p align="center">
+  <img alt="GitHub top languages" src="https://img.shields.io/github/languages/top/VS-Microservices-Academy/service-product.svg">
+
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/VS-Microservices-Academy/service-product.svg">
+
+  <img alt="GitHub workflow status" src="https://github.com/VS-Microservices-Academy/service-product/actions/workflows/.github/workflows/test.yml/badge.svg">
+
+  <img alt="GitHub license" src="https://img.shields.io/github/license/VS-Microservices-Academy/service-product.svg">
+</p>
+
 ### Pre-requisites
 
 - Install `sqlx-client`
