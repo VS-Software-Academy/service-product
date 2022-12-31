@@ -42,12 +42,13 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            ~/.sqlx-cli/
             target/
           key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Migrate database
         run: |
-          cargo install --force --version=0.6.2 sqlx-cli
+          cargo install --force --version=0.6.2 --target-dir ~/.sqlx-cli sqlx-cli
           sqlx database create
           sqlx migrate run
 
