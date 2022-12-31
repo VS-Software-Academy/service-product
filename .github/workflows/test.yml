@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - issue8
+      - vaniusrb/issue8
   pull_request:
     branches: [master]
 
