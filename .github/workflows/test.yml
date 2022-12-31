@@ -1,0 +1,63 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - master
+      - setup-ci-action
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+  POSTGRES_PASSWORD: password
+  DATABASE_URL: postgres://postgres:password@127.0.0.1/product
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Make envfile
+        uses: SpicyPizza/create-envfile@v1.3
+        with:
+          envkey_POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          envkey_DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Database container
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./docker-compose.yml"
+          down-flags: "--volumes"
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - name: Cargo cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Migrate database
+        run: |
+          cargo install --force --version=0.6.2 sqlx-cli
+          sqlx database create
+          sqlx migrate run
+
+      - name: Execute test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
