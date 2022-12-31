@@ -2,7 +2,9 @@ name: Test
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - issue8
   pull_request:
     branches: [master]
 
