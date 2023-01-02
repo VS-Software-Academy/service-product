@@ -30,7 +30,8 @@ DATABASE_URL=postgres://vs-academy-product-postgres:password@127.0.0.1/product
 Start database container:
 
 ```
-docker-compose up
+docker-compose -f docker-compose-db.yml up -d
+
 ```
 
 Create Postgres database:
@@ -40,20 +41,34 @@ sqlx database create
 sqlx migrate run
 ```
 
-### Future updates
-
-Always when update the project (from git) should execute database modifications:
-
-```
-sqlx migrate run
-```
-
 ### Execute the project
 
 To execute project, using address 127.0.0.1:3000:
 
 ```
 cargo run
+```
+
+### Execute the container
+
+Build the container image:
+
+```
+./scripts/build.sh
+```
+
+Run docker-compose:
+
+```
+docker-compose up -d
+```
+
+### Future updates
+
+Always when update the project (from git) should execute database modifications:
+
+```
+sqlx migrate run
 ```
 
 ### Project guideline
