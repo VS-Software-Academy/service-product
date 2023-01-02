@@ -35,9 +35,6 @@ struct Args {
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
-    // Load env variables from .env file
-    dotenvy::dotenv()?;
-
     // Configure trace
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
@@ -46,8 +43,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    // Load env variables from .env file
+    if let Err(e) = dotenvy::dotenv() {
+        tracing::debug!("attempt to read .env: `{e}`");
+    }
+
     // Setup connection pool
     let db_connection_str = std::env::var("DATABASE_URL").expect("database env not defined");
+
+    tracing::info!("try connecting {db_connection_str}...");
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&db_connection_str)
