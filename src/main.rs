@@ -15,11 +15,16 @@ use crate::{
     },
     repository::{category::DbCategoryRepository, product::DbProductRepository},
 };
-use axum::{http::StatusCode, routing::get, Router};
+use axum::{
+    http::{HeaderValue, StatusCode},
+    routing::get,
+    Router,
+};
 use clap::Parser;
 use service::{category::CategoryService, product::ProductService};
 use sqlx::postgres::PgPoolOptions;
 use std::{error::Error, net::SocketAddr};
+use tower_http::cors::{AllowHeaders, AllowMethods, CorsLayer};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Parser)]
@@ -29,6 +34,9 @@ struct Args {
     /// Socket address to start the web server
     #[arg(short, long, default_value = "127.0.0.1:3000")]
     addr: SocketAddr,
+    /// Enable allow cors origin
+    #[arg(short, long)]
+    cors_allow_origin: Option<HeaderValue>,
 }
 
 #[tokio::main]
@@ -57,7 +65,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .max_connections(5)
         .connect(&db_connection_str)
         .await
-        .expect("can connect to database");
+        .expect("can't connect to database");
 
     // Create app state
     let app_state = AppState::new(
@@ -66,7 +74,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Define routes
-    let app = Router::new()
+    let mut app = Router::new()
         .route("/api/products", get(products_index).post(products_create))
         .route(
             "/api/products/:id",
@@ -86,7 +94,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )
         .with_state(app_state);
 
-    tracing::debug!("listening on {}", args.addr);
+    if let Some(cors_allow_origin) = args.cors_allow_origin {
+        tracing::info!("CORS allow origin {cors_allow_origin:?}");
+        let cors = CorsLayer::new()
+            .allow_headers(AllowHeaders::any())
+            .allow_origin(cors_allow_origin)
+            .allow_methods(AllowMethods::any());
+        app = app.layer(cors);
+    }
+
+    tracing::info!("listening on {}", args.addr);
     axum::Server::bind(&args.addr)
         .serve(app.into_make_service())
         .await

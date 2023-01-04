@@ -43,10 +43,22 @@ sqlx migrate run
 
 ### Execute the project
 
-To execute project, using address 127.0.0.1:3000:
+To execute project, using address `127.0.0.1:3000`:
 
 ```
 cargo run
+```
+
+To execute defining different address:
+
+```
+cargo run --addr 127.0.0.1:8080
+```
+
+To enable CORS:
+
+```
+cargo run --cors-allow-origin http://127.0.0.1:3000
 ```
 
 ### Execute the container
