@@ -1,9 +1,9 @@
 use crate::app::repository::Repository;
-use crate::util::pagination::Offset;
+use crate::utils::pagination::Offset;
 use crate::{
-    app::{error::Error, service::Service},
-    model::product::Product,
-    util::pagination::Limit,
+    app::{error::AppError, service::Service},
+    models::product::Product,
+    utils::pagination::Limit,
 };
 use async_trait::async_trait;
 use rust_decimal_macros::dec;
@@ -20,9 +20,9 @@ impl ProductService {
         }
     }
 
-    fn validate(&self, entity: &Product) -> Result<(), Error> {
+    fn validate(&self, entity: &Product) -> Result<(), AppError> {
         if entity.price == dec!(0) {
-            return Err(Error::Validation(String::from("price can't be zero")));
+            return Err(AppError::Validation(String::from("price can't be zero")));
         }
         Ok(())
     }
@@ -32,25 +32,25 @@ impl ProductService {
 impl Service for ProductService {
     type Entity = Product;
 
-    async fn read(&self, id: uuid::Uuid) -> Result<Option<Self::Entity>, Error> {
+    async fn read(&self, id: uuid::Uuid) -> Result<Option<Self::Entity>, AppError> {
         self.repository.read(id).await
     }
 
-    async fn list(&self, limit: Limit, offset: Offset) -> Result<Vec<Self::Entity>, Error> {
+    async fn list(&self, limit: Limit, offset: Offset) -> Result<Vec<Self::Entity>, AppError> {
         self.repository.list(limit, offset).await
     }
 
-    async fn create(&self, entity: Self::Entity) -> Result<Self::Entity, Error> {
+    async fn create(&self, entity: Self::Entity) -> Result<Self::Entity, AppError> {
         self.validate(&entity)?;
         self.repository.create(entity).await
     }
 
-    async fn update(&self, entity: Self::Entity) -> Result<Self::Entity, Error> {
+    async fn update(&self, entity: Self::Entity) -> Result<Self::Entity, AppError> {
         self.validate(&entity)?;
         self.repository.update(entity).await
     }
 
-    async fn delete(&self, id: uuid::Uuid) -> Result<Uuid, Error> {
+    async fn delete(&self, id: uuid::Uuid) -> Result<Uuid, AppError> {
         self.repository.delete(id).await
     }
 }

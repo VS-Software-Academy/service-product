@@ -1,7 +1,7 @@
 use crate::{
     app::repository::Repository,
-    model::product::Product,
-    util::pagination::{Limit, Offset},
+    models::product::Product,
+    utils::pagination::{Limit, Offset},
 };
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
@@ -21,7 +21,7 @@ impl DbProductRepository {
 impl Repository for DbProductRepository {
     type Entity = Product;
 
-    async fn read(&self, id: Uuid) -> Result<Option<Self::Entity>, crate::app::error::Error> {
+    async fn read(&self, id: Uuid) -> Result<Option<Self::Entity>, crate::app::error::AppError> {
         let result = sqlx::query_as!(Product, r#"SELECT * FROM "product" WHERE ID = $1"#, id)
             .fetch_optional(&self.pool)
             .await?;
@@ -32,7 +32,7 @@ impl Repository for DbProductRepository {
         &self,
         limit: Limit,
         offset: Offset,
-    ) -> Result<Vec<Self::Entity>, crate::app::error::Error> {
+    ) -> Result<Vec<Self::Entity>, crate::app::error::AppError> {
         let list = sqlx::query_as!(
             Product,
             r#"SELECT * FROM "product" OFFSET $1 LIMIT $2"#,
@@ -44,7 +44,10 @@ impl Repository for DbProductRepository {
         Ok(list)
     }
 
-    async fn create(&self, entity: Self::Entity) -> Result<Self::Entity, crate::app::error::Error> {
+    async fn create(
+        &self,
+        entity: Self::Entity,
+    ) -> Result<Self::Entity, crate::app::error::AppError> {
         sqlx::query!(
             r#"INSERT INTO "product" ("id", "description", "category", "price", "created_at")
 VALUES ($1, $2, $3, $4, $5)"#,
@@ -59,7 +62,10 @@ VALUES ($1, $2, $3, $4, $5)"#,
         Ok(entity)
     }
 
-    async fn update(&self, entity: Self::Entity) -> Result<Self::Entity, crate::app::error::Error> {
+    async fn update(
+        &self,
+        entity: Self::Entity,
+    ) -> Result<Self::Entity, crate::app::error::AppError> {
         sqlx::query!(
             r#"UPDATE "product" SET "description" = $1, "category" = $2, "price" = $3,
 "created_at" = $4 WHERE "id" = $5"#,
@@ -74,7 +80,7 @@ VALUES ($1, $2, $3, $4, $5)"#,
         Ok(entity)
     }
 
-    async fn delete(&self, id: Uuid) -> Result<Uuid, crate::app::error::Error> {
+    async fn delete(&self, id: Uuid) -> Result<Uuid, crate::app::error::AppError> {
         sqlx::query!(r#"DELETE FROM "product" WHERE "id" = $1"#, id,)
             .execute(&self.pool)
             .await?;
