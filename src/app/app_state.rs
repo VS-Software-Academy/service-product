@@ -1,5 +1,5 @@
-use crate::service::category::CategoryService;
-use crate::service::product::ProductService;
+use crate::services::category::CategoryService;
+use crate::services::product::ProductService;
 use std::sync::Arc;
 
 struct InnerAppState {

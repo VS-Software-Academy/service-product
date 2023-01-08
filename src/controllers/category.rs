@@ -1,9 +1,9 @@
-use crate::app::error::Error;
+use crate::app::error::AppError;
 use crate::app::service::Service;
 use crate::{
     app::app_state::AppState,
-    model::category::Category,
-    util::pagination::{Limit, Pagination},
+    models::category::Category,
+    utils::pagination::{Limit, Pagination},
 };
 use axum::{
     extract::{Path, Query, State},
@@ -15,7 +15,7 @@ use uuid::Uuid;
 pub async fn categories_index(
     State(app_state): State<AppState>,
     pagination: Option<Query<Pagination>>,
-) -> Result<impl IntoResponse, Error> {
+) -> Result<impl IntoResponse, AppError> {
     let Pagination { limit, offset } = pagination.unwrap_or_default().0;
     let limit = limit.unwrap_or(Limit(10));
     let offset = offset.unwrap_or_default();
@@ -26,7 +26,7 @@ pub async fn categories_index(
 pub async fn categories_create(
     State(app_state): State<AppState>,
     Json(entity): Json<Category>,
-) -> Result<impl IntoResponse, Error> {
+) -> Result<impl IntoResponse, AppError> {
     let entity = app_state.category_service().create(entity).await?;
     Ok(Json(entity))
 }
@@ -34,7 +34,7 @@ pub async fn categories_create(
 pub async fn categories_read(
     Path(id): Path<Uuid>,
     State(app_state): State<AppState>,
-) -> Result<impl IntoResponse, Error> {
+) -> Result<impl IntoResponse, AppError> {
     let entity = app_state.category_service().read(id).await?;
     Ok(Json(entity))
 }
@@ -42,7 +42,7 @@ pub async fn categories_read(
 pub async fn categories_update(
     State(app_state): State<AppState>,
     Json(entity): Json<Category>,
-) -> Result<impl IntoResponse, Error> {
+) -> Result<impl IntoResponse, AppError> {
     let entity = app_state.category_service().update(entity).await?;
     Ok(Json(entity))
 }
@@ -50,7 +50,7 @@ pub async fn categories_update(
 pub async fn categories_delete(
     Path(id): Path<Uuid>,
     State(app_state): State<AppState>,
-) -> Result<impl IntoResponse, Error> {
+) -> Result<impl IntoResponse, AppError> {
     let entity = app_state.category_service().delete(id).await?;
     Ok(Json(entity))
 }

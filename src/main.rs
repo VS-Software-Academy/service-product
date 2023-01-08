@@ -1,19 +1,19 @@
 pub mod app;
-pub mod controller;
-pub mod model;
-pub mod repository;
-pub mod service;
-pub mod util;
+pub mod controllers;
+pub mod models;
+pub mod repositories;
+pub mod services;
+pub mod utils;
 
 use crate::{
     app::app_state::AppState,
-    controller::{
+    controllers::{
         category::{categories_create, categories_delete, categories_index, categories_read},
         product::{
             products_create, products_delete, products_index, products_read, products_update,
         },
     },
-    repository::{category::DbCategoryRepository, product::DbProductRepository},
+    repositories::{category::DbCategoryRepository, product::DbProductRepository},
 };
 use axum::{
     http::{HeaderValue, StatusCode},
@@ -21,7 +21,7 @@ use axum::{
     Router,
 };
 use clap::Parser;
-use service::{category::CategoryService, product::ProductService};
+use services::{category::CategoryService, product::ProductService};
 use sqlx::postgres::PgPoolOptions;
 use std::{error::Error, net::SocketAddr};
 use tower_http::cors::{AllowHeaders, AllowMethods, CorsLayer};
