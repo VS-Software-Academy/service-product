@@ -1,4 +1,6 @@
-## Project to demonstrate product API service
+<h2 align="center">
+    Project to demonstrate product API service
+</h2>
 
 <p align="center">
   <img alt="GitHub top languages" src="https://img.shields.io/github/languages/top/VS-Microservices-Academy/service-product.svg">
